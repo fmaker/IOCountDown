@@ -1,14 +1,10 @@
 package com.handycodeworks.iocountdown;
 
-import android.R;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -17,6 +13,20 @@ import android.view.SurfaceView;
 public class Panel extends SurfaceView implements SurfaceHolder.Callback{
 	private CanvasThread canvasthread;
 	
+	private int[][] dotMatrix;
+	private final int DIGIT_WIDTH = 4;
+	private final int DIGIT_HEIGHT = 7;
+	private final int NUM_DIGITS = 9;
+	private final int NUM_X = DIGIT_WIDTH*NUM_DIGITS;
+	private final int NUM_Y = DIGIT_HEIGHT;
+	private final int DIGIT_SPACING = 1;
+	private final int RADIUS = 5;
+	private final int PADDING = RADIUS/2;
+	
+	// Paint positions
+	int originX = 0, originY = 0;
+	int centerX = 0, centerY = 0;
+	
     public Panel(Context context, AttributeSet attrs) {
 		super(context, attrs); 
 		
@@ -24,9 +34,6 @@ public class Panel extends SurfaceView implements SurfaceHolder.Callback{
 	    canvasthread = new CanvasThread(getHolder(), this);
 	    setFocusable(true);
 	}
-
-	 
-
 
 	 public Panel(Context context) {
 		   super(context);
@@ -39,27 +46,58 @@ public class Panel extends SurfaceView implements SurfaceHolder.Callback{
 
 	@Override
 	public void onDraw(Canvas canvas) {
-		Paint paint = new Paint();
-
+		// Fill canvas
 		canvas.drawColor(Palette.FILL_COLOR);
 		
+		Paint paint = new Paint();
+		paint.setAntiAlias(true);
+
+		int dotX = originX,dotY = originY;
+		for(int j=0;j<NUM_Y;j++){
+			dotX = originX;
+			for(int i=0;i<NUM_X;i++){
+				paint.setColor(dotMatrix[i][j]);
+				canvas.drawCircle(dotX, dotY, RADIUS, paint);
+				dotX += RADIUS*2 + PADDING;
+			}
+			dotY -= RADIUS*2 + PADDING;
+		}
+		paint.setColor(Color.BLACK);
+		canvas.drawCircle(centerX, centerY, 1, paint);
 	}
 	 
-	 
+	private void clearMatrix(){
+		for(int i=0;i<NUM_X;i++){
+			for(int j=0;j<NUM_Y;j++){
+				if((i+1)%10==0 && i!=0)
+					dotMatrix[i][j] = Color.YELLOW;
+				else
+					dotMatrix[i][j] = Color.RED;
+			}
+		}
+		dotMatrix[0][0] = Color.CYAN;
+		dotMatrix[NUM_X-1][NUM_Y-1] = Color.BLUE;
+	}
 	 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
-		// TODO Auto-generated method stub
+	    centerX = width/2;
+	    centerY = height/2;
+	    
+	    originX = width/2 - (NUM_X/2)*(PADDING + 2*RADIUS) + RADIUS + PADDING/2;
+	    originY = height/2 + (NUM_Y/2)*(RADIUS*2 + PADDING);
 		
 	}
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-		// TODO Auto-generated method stub
+		// Create matrix
+	    dotMatrix = new int[NUM_X][NUM_Y];
+	    clearMatrix();
+	    
 	    canvasthread.setRunning(true);
 	    canvasthread.start();
 
-		
 	}
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
@@ -74,6 +112,8 @@ public class Panel extends SurfaceView implements SurfaceHolder.Callback{
 				// we will try it again and again...
 			}
 		}
+		
+		dotMatrix = null; // Free memory
 
 	}
 
