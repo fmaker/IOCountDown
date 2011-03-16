@@ -20,8 +20,8 @@ public class Panel extends SurfaceView implements SurfaceHolder.Callback{
 	private final int NUM_X = DIGIT_WIDTH*NUM_DIGITS;
 	private final int NUM_Y = DIGIT_HEIGHT;
 	private final int DIGIT_SPACING = 1;
-	private final int RADIUS = 5;
-	private final int PADDING = RADIUS/2;
+	private final int RADIUS = 6;
+	private final int PADDING = 1;
 	
 	// Paint positions
 	int originX = 0, originY = 0;
@@ -62,21 +62,18 @@ public class Panel extends SurfaceView implements SurfaceHolder.Callback{
 			}
 			dotY -= RADIUS*2 + PADDING;
 		}
-		paint.setColor(Color.BLACK);
-		canvas.drawCircle(centerX, centerY, 1, paint);
+		
+		// Center reference point
+//		paint.setColor(Color.BLACK);
+//		canvas.drawCircle(centerX, centerY, 1, paint);
 	}
 	 
 	private void clearMatrix(){
 		for(int i=0;i<NUM_X;i++){
 			for(int j=0;j<NUM_Y;j++){
-				if((i+1)%10==0 && i!=0)
-					dotMatrix[i][j] = Color.YELLOW;
-				else
-					dotMatrix[i][j] = Color.RED;
+				dotMatrix[i][j] = Palette.BLANK_DOT;
 			}
 		}
-		dotMatrix[0][0] = Color.CYAN;
-		dotMatrix[NUM_X-1][NUM_Y-1] = Color.BLUE;
 	}
 	 
 	@Override
