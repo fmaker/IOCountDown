@@ -57,9 +57,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 
 //	private Texture mTexture;
 
-	private TextureRegion mLtGreyBall;
-	private TextureRegion mBlueBall;
-	private TextureRegion mDarkGreyBall;
+	private TextureRegion mLtGreyBall, mBlueBall, mDarkGreyBall, mCyanBall, mRedBall, mGreenBall;
 
 	private PhysicsWorld mPhysicsWorld;
 
@@ -79,6 +77,9 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		Texture blueTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 		Texture ltGreyTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 		Texture darkGreyTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+		Texture cyanTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+		Texture redTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+		Texture greenTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 
 		/* TextureRegions. */
 		TextureRegionFactory.setAssetBasePath("balls/");
@@ -88,6 +89,12 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		this.mEngine.getTextureManager().loadTexture(ltGreyTexture);
 		this.mDarkGreyBall = TextureRegionFactory.createFromAsset(ltGreyTexture, this, "grey2.png", 0, 0);
 		this.mEngine.getTextureManager().loadTexture(darkGreyTexture);
+		this.mCyanBall = TextureRegionFactory.createFromAsset(cyanTexture, this, "cyan.png", 0, 0);
+		this.mEngine.getTextureManager().loadTexture(cyanTexture);
+		this.mRedBall = TextureRegionFactory.createFromAsset(redTexture, this, "red.png", 0, 0);
+		this.mEngine.getTextureManager().loadTexture(redTexture);
+		this.mGreenBall = TextureRegionFactory.createFromAsset(greenTexture, this, "green.png", 0, 0);
+		this.mEngine.getTextureManager().loadTexture(greenTexture);
 
 //		this.enableAccelerometerSensor(this);
 	}
@@ -178,6 +185,15 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 
 		TextureRegion ballTexture = null;
 		switch(ballColor){
+		case Palette.GREEN:
+			ballTexture = mGreenBall;
+			break;
+		case Palette.RED:
+			ballTexture = mRedBall;
+			break;
+		case Palette.CYAN:
+			ballTexture = mCyanBall;
+			break;
 		case Palette.DARK_GREY:
 			ballTexture = mDarkGreyBall;
 			break;

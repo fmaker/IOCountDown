@@ -4,12 +4,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.util.Log;
 
 public class TimeDisplay {
-	private final Date googleIO = new Date(2011,05,10,9,00);
-	private DateFormat format = new SimpleDateFormat("dd:HH:mm:ss",Locale.US);
 	
 	protected int[][] mDotMatrix;
 	protected static final int DIGIT_WIDTH = 4;
@@ -21,8 +21,22 @@ public class TimeDisplay {
 	protected static final int DIGIT_SPACING = 1;
 	protected static final int RADIUS = 6;
 	protected static final int PADDING = RADIUS/2;
+
+	private final long MILLI_PER_DAY = 1000*60*60*24;
+	private final long MILLI_PER_HOUR = 1000*60*60;
+	private final long MILLI_PER_MIN = 1000*60;
+	private final long MILLI_PER_SEC = 1000;
+	private final long ONE_SECOND = 1000;
+
+	private final long googleIO = 1305043200000L; // 05/10/11 - 14:00:00 GMT (09:00:00 PST)
+	private DateFormat format = new SimpleDateFormat("dd:HH:mm:ss",Locale.US);
+	private Timer mTimer = new Timer(true);
 	
-	private final int MILLI_PER_DAY = 1000*60*60*24;
+	private TimerTask task = new TimerTask(){
+		public void run(){
+			updateMatrix();
+		};
+	};
 	
 	public TimeDisplay(int width, int height){
 	    
@@ -34,27 +48,47 @@ public class TimeDisplay {
 				mDotMatrix[i][j] = Palette.CLEAR;
 			}
 		}
-		updateMatrix();
+		// Start timer
+		mTimer.scheduleAtFixedRate(task, 0, ONE_SECOND*10);
 	}
+	
+	
 	
 	private void updateMatrix(){
-		long timeDelta = 0;
-//		Date timeLeft = new Date(System.currentTimeMillis() - googleIO.getTime());
-//		Log.d("Test",format.format(timeLeft));
+//		Log.d("IO","IO: "+String.valueOf(googleIO));
+//		Log.d("IO","Now: "+String.valueOf(System.currentTimeMillis()));
+		long timeDelta = googleIO - System.currentTimeMillis();
 		
-//		int digit = getDigitNum(2,getDays(timeDelta));
-		for(int i=0;i<NUM_DIGITS;i++)
-			paintDigit(i,i+1,Palette.BLUE);
+		// All done!
+		if(timeDelta < 0){
+			timeDelta = 0;
+			task.cancel();
+		}
 		
-	}
-	
-	// Digits order is 2 1 0
-	private int getDigitNum(int i,int number){
-		return number / (number%(10^(i+1)));
-	}
-	
-	private int getDays(long timeDelta){
-		return (int) (timeDelta / MILLI_PER_DAY);
+		// Days
+		int days = (int) (timeDelta / MILLI_PER_DAY);
+		paintDigit(0,days/100,Palette.BLUE);
+		paintDigit(1,(days-days/100)/10,Palette.BLUE);
+		paintDigit(2,(days-days/100 - (days/10)*10),Palette.BLUE);
+		
+		// Hours
+		timeDelta = timeDelta - days*MILLI_PER_DAY;
+		int hours = (int) (timeDelta /MILLI_PER_HOUR);
+		paintDigit(3,hours/10,Palette.CYAN);
+		paintDigit(4,(hours -(hours/10)*10),Palette.CYAN);
+		
+		// Minutes
+		timeDelta = timeDelta - hours*MILLI_PER_HOUR;
+		int minutes = (int) (timeDelta /MILLI_PER_MIN);
+		paintDigit(5,minutes/10,Palette.RED);
+		paintDigit(6,(minutes -(minutes/10)*10),Palette.RED);
+		
+		// Seconds
+		timeDelta = timeDelta - minutes*MILLI_PER_MIN;
+		int seconds = (int) (timeDelta /MILLI_PER_SEC);
+		paintDigit(7,seconds/10,Palette.GREEN);
+		paintDigit(8,(seconds -(seconds/10)*10),Palette.GREEN);
+		
 	}
 	
 	// Digits are left to right from 0->8
