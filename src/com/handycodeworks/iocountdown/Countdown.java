@@ -1,8 +1,5 @@
 package com.handycodeworks.iocountdown;
 
-import java.security.acl.LastOwnerException;
-import java.util.LinkedList;
-
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.options.EngineOptions;
@@ -27,6 +24,7 @@ import org.anddev.andengine.sensor.accelerometer.AccelerometerData;
 import org.anddev.andengine.sensor.accelerometer.IAccelerometerListener;
 
 import android.hardware.SensorManager;
+import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -155,17 +153,6 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 	    loadDots();
 	}
 
-//	@Override
-//	public boolean onSceneTouchEvent(final Scene pScene, final TouchEvent pSceneTouchEvent) {
-//		if(this.mPhysicsWorld != null) {
-//			if(pSceneTouchEvent.isActionDown()) {
-//				this.addBall(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
-//				return true;
-//			}
-//		}
-//		return false;
-//	}
-
 	@Override
 	public void onAccelerometerChanged(final AccelerometerData pAccelerometerData) {
 		final Vector2 gravity = Vector2Pool.obtain(pAccelerometerData.getY(), pAccelerometerData.getX());
@@ -187,13 +174,9 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 			}
 			dotY -= TimeDisplay.RADIUS*2 + TimeDisplay.PADDING;
 		}
-		
-		// Center reference point
-//		paint.setColor(Color.BLACK);
-//		canvas.drawCircle(centerX, centerY, 1, paint);
 	}
 	
-	protected Sprite addBall(final float pX, final float pY, int ballColor) {
+	protected synchronized Sprite addBall(final float pX, final float pY, int ballColor) {
 		final Scene scene = this.mEngine.getScene();
 
 		final NotifySprite ball;
@@ -231,7 +214,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 	}
 
 	@Override
-	public void OnTimeChangedListener() {
+	public synchronized void OnTimeChangedListener() {
 		final Scene scene = this.mEngine.getScene();
 		for(int i=0;i<TimeDisplay.NUM_X;i++){
 			for(int j=0;j<TimeDisplay.NUM_Y;j++){

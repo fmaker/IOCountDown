@@ -67,7 +67,7 @@ public class TimeDisplay {
 	}
 	
 	
-	private void updateMatrix(){
+	private synchronized void updateMatrix(){
 //		Log.d("IO","IO: "+String.valueOf(googleIO));
 //		Log.d("IO","Now: "+String.valueOf(System.currentTimeMillis()));
 		long timeDelta = googleIO - System.currentTimeMillis();
@@ -105,7 +105,7 @@ public class TimeDisplay {
 	}
 	
 	// Digits are left to right from 0->8
-	private void paintDigit(int digitNum,int digitValue,int color){
+	private synchronized void paintDigit(int digitNum,int digitValue,int color){
 		int[][] digitArray = new int[DIGIT_WIDTH][DIGIT_HEIGHT];
 		
 		// Fill with default color
