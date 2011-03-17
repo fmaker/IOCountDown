@@ -1,5 +1,7 @@
 package com.handycodeworks.iocountdown;
 
+import java.util.LinkedList;
+
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.options.EngineOptions;
@@ -24,7 +26,6 @@ import org.anddev.andengine.sensor.accelerometer.AccelerometerData;
 import org.anddev.andengine.sensor.accelerometer.IAccelerometerListener;
 
 import android.hardware.SensorManager;
-import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -33,18 +34,10 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.handycodeworks.iocountdown.TimeDisplay.TimeChangedListener;
 
 
-public class Countdown extends BaseExample implements IAccelerometerListener, TimeChangedListener {
+public class Countdown extends BaseExample implements IAccelerometerListener, TimeChangedListener, IPositionChangedListener{
 	// ===========================================================
 	// Constants
 	// ===========================================================
-
-	@Override
-	public void runOnUpdateThread(Runnable pRunnable) {
-		super.runOnUpdateThread(pRunnable);
-		
-		
-		
-	}
 
 	private static final int CAMERA_WIDTH = 720;
 	private static final int CAMERA_HEIGHT = 480;
@@ -59,6 +52,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 
 	private TextureRegion mLtGreyBall, mBlueBall, mDarkGreyBall, mCyanBall, mRedBall, mGreenBall;
 	private Sprite[][] mBallMatrix = new Sprite[TimeDisplay.NUM_X][TimeDisplay.NUM_Y];
+	private LinkedList<Sprite> mFreeBalls = new LinkedList<Sprite>();
 
 	private PhysicsWorld mPhysicsWorld;
 
@@ -97,7 +91,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 		this.mGreenBall = TextureRegionFactory.createFromAsset(greenTexture, this, "green.png", 0, 0);
 		this.mEngine.getTextureManager().loadTexture(greenTexture);
 
-//		this.enableAccelerometerSensor(this);
+		this.enableAccelerometerSensor(this);
 	}
 
 	@Override
@@ -122,11 +116,11 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 		final Shape left = new Rectangle(0, 0, 2, CAMERA_HEIGHT);
 		final Shape right = new Rectangle(CAMERA_WIDTH - 2, 0, 2, CAMERA_HEIGHT);
 
-		final FixtureDef wallFixtureDef = PhysicsFactory.createFixtureDef(0, 0.5f, 0.5f);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, ground, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, roof, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, left, BodyType.StaticBody, wallFixtureDef);
-		PhysicsFactory.createBoxBody(this.mPhysicsWorld, right, BodyType.StaticBody, wallFixtureDef);
+		//final FixtureDef wallFixtureDef = PhysicsFactory.createFixtureDef(0, 0.5f, 0.5f);
+		//PhysicsFactory.createBoxBody(this.mPhysicsWorld, ground, BodyType.StaticBody, wallFixtureDef);
+		//PhysicsFactory.createBoxBody(this.mPhysicsWorld, roof, BodyType.StaticBody, wallFixtureDef);
+		//PhysicsFactory.createBoxBody(this.mPhysicsWorld, left, BodyType.StaticBody, wallFixtureDef);
+		//PhysicsFactory.createBoxBody(this.mPhysicsWorld, right, BodyType.StaticBody, wallFixtureDef);
 
 		scene.getFirstChild().attachChild(ground);
 		scene.getFirstChild().attachChild(roof);
@@ -184,8 +178,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 	protected Sprite addBall(final float pX, final float pY, int ballColor) {
 		final Scene scene = this.mEngine.getScene();
 
-		final Sprite ball;
-		final Body body;
+		final NotifySprite ball;
 
 		TextureRegion ballTexture = null;
 		switch(ballColor){
@@ -212,12 +205,10 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 			// Don't draw anything
 			return null;
 		}
-		ball = new Sprite(pX, pY, ballTexture);
+		ball = new NotifySprite(pX, pY, ballTexture, this);
 		ball.setUserData(ballColor); // Add ball color for update usage
-		//body = PhysicsFactory.createCircleBody(this.mPhysicsWorld, ball, BodyType.StaticBody, FIXTURE_DEF);
 
 		scene.getLastChild().attachChild(ball);
-//		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(ball, body, true, true));
 		return ball;
 	}
 
@@ -227,8 +218,8 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 		for(int i=0;i<TimeDisplay.NUM_X;i++){
 			for(int j=0;j<TimeDisplay.NUM_Y;j++){
 				if(mBallMatrix[i][j]!=null){ // Clear sprites are null
-					int currColor = (Integer) mBallMatrix[i][j].getUserData();
-					int newColor = mTime.mDotMatrix[i][j];
+					final int currColor = (Integer) mBallMatrix[i][j].getUserData();
+					final int newColor = mTime.mDotMatrix[i][j];
 					if(currColor != newColor){
 //						Log.d("IO",String.format("Ball[%d][%d] has changed from %d to %d",i,j,(Integer) mBallMatrix[i][j].getUserData(),mTime.mDotMatrix[i][j]));
 						
@@ -239,9 +230,17 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 						runOnUpdateThread(new Runnable(){
 							@Override
 							public void run(){
-								//final PhysicsConnector ballConnector = mPhysicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(ball);
-								scene.getLastChild().detachChild(ball);
-								//mPhysicsWorld.unregisterPhysicsConnector(ballConnector);
+								
+								// See ball free
+								if(currColor != Palette.LT_GREY){
+									final Body body = PhysicsFactory.createCircleBody(mPhysicsWorld, ball, BodyType.DynamicBody, FIXTURE_DEF);
+									mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(ball, body, true, true));
+//									mFreeBalls.add(ball);
+								}
+								else{
+									scene.getLastChild().detachChild(ball);
+								}
+//								mPhysicsWorld.unregisterPhysicsConnector(ballConnector);
 								//mPhysicsWorld.destroyBody(ballConnector.getBody());
 							}
 						});
@@ -252,6 +251,18 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 					}
 				}
 			}
+		}
+	}
+
+	@Override
+	public void onPositionChanged(Sprite s, float posX, float posY) {
+		if(posX > CAMERA_WIDTH || posX < 0 ||
+		   posY > CAMERA_HEIGHT || posY < 0){
+			final Scene scene = this.mEngine.getScene();
+			final PhysicsConnector ballConnector = mPhysicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(s);
+			mPhysicsWorld.unregisterPhysicsConnector(ballConnector);
+			mPhysicsWorld.destroyBody(ballConnector.getBody());
+			scene.getLastChild().detachChild(s);
 		}
 	}
 }
