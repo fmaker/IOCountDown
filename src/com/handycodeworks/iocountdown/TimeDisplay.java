@@ -29,14 +29,25 @@ public class TimeDisplay {
 	private final long ONE_SECOND = 1000;
 
 	private final long googleIO = 1305043200000L; // 05/10/11 - 14:00:00 GMT (09:00:00 PST)
-	private DateFormat format = new SimpleDateFormat("dd:HH:mm:ss",Locale.US);
-	private Timer mTimer = new Timer(true);
+	private Timer mTimer = new Timer(false);
+
+	private int currDays = 0;
+	private int currHours = 0;
+	private int currMins = 0;
+	private int currSecs = 0;
+	
+	private TimeChangedListener listener;
 	
 	private TimerTask task = new TimerTask(){
 		public void run(){
 			updateMatrix();
+			listener.OnTimeChangedListener();
 		};
 	};
+	
+	public void setTimeChangedListener(TimeChangedListener l){
+		listener = l;
+	}
 	
 	public TimeDisplay(int width, int height){
 	    
@@ -48,10 +59,12 @@ public class TimeDisplay {
 				mDotMatrix[i][j] = Palette.CLEAR;
 			}
 		}
-		// Start timer
-		mTimer.scheduleAtFixedRate(task, 0, ONE_SECOND*10);
 	}
 	
+	public void start(){
+		// Start timer
+		mTimer.scheduleAtFixedRate(task, 0, ONE_SECOND);
+	}
 	
 	
 	private void updateMatrix(){
@@ -303,4 +316,8 @@ public class TimeDisplay {
 //		}
 //	}
 
+	public interface TimeChangedListener{
+		public void OnTimeChangedListener();
+	}
+	
 }

@@ -7,7 +7,6 @@ import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
-import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.background.ColorBackground;
 import org.anddev.andengine.entity.shape.Shape;
 import org.anddev.andengine.entity.sprite.Sprite;
@@ -17,8 +16,6 @@ import org.anddev.andengine.extension.physics.box2d.PhysicsConnector;
 import org.anddev.andengine.extension.physics.box2d.PhysicsFactory;
 import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
 import org.anddev.andengine.extension.physics.box2d.util.Vector2Pool;
-import org.anddev.andengine.input.touch.TouchEvent;
-import org.anddev.andengine.opengl.texture.BuildableTexture;
 import org.anddev.andengine.opengl.texture.Texture;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
@@ -26,17 +23,17 @@ import org.anddev.andengine.opengl.texture.region.TextureRegionFactory;
 import org.anddev.andengine.sensor.accelerometer.AccelerometerData;
 import org.anddev.andengine.sensor.accelerometer.IAccelerometerListener;
 
-import android.graphics.Paint;
 import android.hardware.SensorManager;
-import android.widget.Toast;
+import android.util.Log;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.handycodeworks.iocountdown.TimeDisplay.TimeChangedListener;
 
 
-public class Countdown extends BaseExample implements IAccelerometerListener, IOnSceneTouchListener {
+public class Countdown extends BaseExample implements IAccelerometerListener, TimeChangedListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -44,6 +41,9 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 	@Override
 	public void runOnUpdateThread(Runnable pRunnable) {
 		super.runOnUpdateThread(pRunnable);
+		
+		
+		
 	}
 
 	private static final int CAMERA_WIDTH = 720;
@@ -58,6 +58,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 //	private Texture mTexture;
 
 	private TextureRegion mLtGreyBall, mBlueBall, mDarkGreyBall, mCyanBall, mRedBall, mGreenBall;
+	private Sprite[][] mBallMatrix = new Sprite[TimeDisplay.NUM_X][TimeDisplay.NUM_Y];
 
 	private PhysicsWorld mPhysicsWorld;
 
@@ -105,12 +106,14 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 
 		final Scene scene = new Scene(2);
 		scene.setBackground(new ColorBackground(211, 211, 211));
-		scene.setOnSceneTouchListener(this);
+//		scene.setOnSceneTouchListener(this);
 
 		this.mPhysicsWorld = new PhysicsWorld(new Vector2(0, SensorManager.GRAVITY_EARTH), false);
 		
 		// Time display
 		this.mTime = new TimeDisplay(CAMERA_WIDTH,CAMERA_HEIGHT);
+		mTime.setTimeChangedListener(this);
+		mTime.start();
 	    originX = CAMERA_WIDTH/2 - (TimeDisplay.NUM_X/2)*(TimeDisplay.PADDING + 2*TimeDisplay.RADIUS) - TimeDisplay.RADIUS;// + TimeDisplay.PADDING/2;
 	    originY = CAMERA_HEIGHT/2 + (TimeDisplay.NUM_Y/2)*(TimeDisplay.RADIUS*2 + TimeDisplay.PADDING);
 
@@ -140,16 +143,16 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 	    loadDots();
 	}
 
-	@Override
-	public boolean onSceneTouchEvent(final Scene pScene, final TouchEvent pSceneTouchEvent) {
+//	@Override
+//	public boolean onSceneTouchEvent(final Scene pScene, final TouchEvent pSceneTouchEvent) {
 //		if(this.mPhysicsWorld != null) {
 //			if(pSceneTouchEvent.isActionDown()) {
 //				this.addBall(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
 //				return true;
 //			}
 //		}
-		return false;
-	}
+//		return false;
+//	}
 
 	@Override
 	public void onAccelerometerChanged(final AccelerometerData pAccelerometerData) {
@@ -166,7 +169,8 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		for(int j=0;j<TimeDisplay.NUM_Y;j++){
 			dotX = originX;
 			for(int i=0;i<TimeDisplay.NUM_X;i++){
-				addBall(dotX, dotY, mTime.mDotMatrix[i][j]);
+				Sprite b = addBall(dotX, dotY, mTime.mDotMatrix[i][j]);
+				mBallMatrix[i][j] = b; // Save reference for changing later
 				dotX += TimeDisplay.RADIUS*2 + TimeDisplay.PADDING;
 			}
 			dotY -= TimeDisplay.RADIUS*2 + TimeDisplay.PADDING;
@@ -177,10 +181,10 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 //		canvas.drawCircle(centerX, centerY, 1, paint);
 	}
 	
-	protected void addBall(final float pX, final float pY, int ballColor) {
+	protected Sprite addBall(final float pX, final float pY, int ballColor) {
 		final Scene scene = this.mEngine.getScene();
 
-		final Sprite face;
+		final Sprite ball;
 		final Body body;
 
 		TextureRegion ballTexture = null;
@@ -206,12 +210,48 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		case Palette.CLEAR:
 		default:
 			// Don't draw anything
-			return;
+			return null;
 		}
-		face = new Sprite(pX, pY, ballTexture);
-		body = PhysicsFactory.createCircleBody(this.mPhysicsWorld, face, BodyType.StaticBody, FIXTURE_DEF);
+		ball = new Sprite(pX, pY, ballTexture);
+		ball.setUserData(ballColor); // Add ball color for update usage
+		//body = PhysicsFactory.createCircleBody(this.mPhysicsWorld, ball, BodyType.StaticBody, FIXTURE_DEF);
 
-		scene.getLastChild().attachChild(face);
-		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(face, body, true, true));
+		scene.getLastChild().attachChild(ball);
+//		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(ball, body, true, true));
+		return ball;
+	}
+
+	@Override
+	public void OnTimeChangedListener() {
+		final Scene scene = this.mEngine.getScene();
+		for(int i=0;i<TimeDisplay.NUM_X;i++){
+			for(int j=0;j<TimeDisplay.NUM_Y;j++){
+				if(mBallMatrix[i][j]!=null){ // Clear sprites are null
+					int currColor = (Integer) mBallMatrix[i][j].getUserData();
+					int newColor = mTime.mDotMatrix[i][j];
+					if(currColor != newColor){
+//						Log.d("IO",String.format("Ball[%d][%d] has changed from %d to %d",i,j,(Integer) mBallMatrix[i][j].getUserData(),mTime.mDotMatrix[i][j]));
+						
+						// Existing sprite
+						final Sprite ball = mBallMatrix[i][j];
+						
+						// Remove existing sprite from world
+						runOnUpdateThread(new Runnable(){
+							@Override
+							public void run(){
+								//final PhysicsConnector ballConnector = mPhysicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(ball);
+								scene.getLastChild().detachChild(ball);
+								//mPhysicsWorld.unregisterPhysicsConnector(ballConnector);
+								//mPhysicsWorld.destroyBody(ballConnector.getBody());
+							}
+						});
+
+						// Add new sprite
+						Sprite newBall = addBall(ball.getX(),ball.getY(),newColor);
+						mBallMatrix[i][j]=newBall;
+					}
+				}
+			}
+		}
 	}
 }
