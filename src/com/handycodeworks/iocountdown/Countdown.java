@@ -1,5 +1,6 @@
 package com.handycodeworks.iocountdown;
 
+import java.security.acl.LastOwnerException;
 import java.util.LinkedList;
 
 import org.anddev.andengine.engine.Engine;
@@ -41,6 +42,9 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 
 	private static final int CAMERA_WIDTH = 720;
 	private static final int CAMERA_HEIGHT = 480;
+	
+	private static final int LOGO_WIDTH = 287;
+	private static final int LOGO_HEIGHT = 70;
 
 	private static final FixtureDef FIXTURE_DEF = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
 
@@ -50,7 +54,8 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 
 //	private Texture mTexture;
 
-	private TextureRegion mLtGreyBall, mBlueBall, mDarkGreyBall, mCyanBall, mRedBall, mGreenBall;
+	Texture mTexture;
+	private TextureRegion mLtGreyBall, mBlueBall, mDarkGreyBall, mCyanBall, mRedBall, mGreenBall, logoTextureRegion;
 	private Sprite[][] mBallMatrix = new Sprite[TimeDisplay.NUM_X][TimeDisplay.NUM_Y];
 	private LinkedList<Sprite> mFreeBalls = new LinkedList<Sprite>();
 
@@ -100,7 +105,6 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 
 		final Scene scene = new Scene(2);
 		scene.setBackground(new ColorBackground(211, 211, 211));
-//		scene.setOnSceneTouchListener(this);
 
 		this.mPhysicsWorld = new PhysicsWorld(new Vector2(0, SensorManager.GRAVITY_EARTH), false);
 		
@@ -134,6 +138,21 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 
 	@Override
 	public void onLoadComplete() {
+		// I/O logo
+		mTexture = new Texture(512, 128, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+		TextureRegionFactory.setAssetBasePath("gfx/");
+		final TextureRegion logoTextureRegion = TextureRegionFactory.createFromAsset(mTexture, this, "io_logo.png", 0, 0);
+		mEngine.getTextureManager().loadTexture(mTexture);
+		final Scene scene = this.mEngine.getScene();
+
+		runOnUpdateThread(new Runnable(){
+			@Override
+			public void run() {
+				scene.getLastChild().attachChild(new Sprite(CAMERA_WIDTH/2-LOGO_WIDTH/2, TimeDisplay.PADDING*15, logoTextureRegion));
+			}
+			
+		});
+		
 	    loadDots();
 	}
 
