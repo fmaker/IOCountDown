@@ -15,12 +15,11 @@ public class TimeDisplay {
 	protected static final int DIGIT_WIDTH = 4;
 	protected static final int DIGIT_HEIGHT = 7;
 	protected static final int NUM_DIGITS = 9;
-	protected static final int NUM_COLONS = 3;
-	protected static final int COLON_COLS[] = {12,21,30};
+	protected static final int NUM_COLONS = NUM_DIGITS-1;
 	protected static final int NUM_X = DIGIT_WIDTH*NUM_DIGITS+NUM_COLONS;
 	protected static final int NUM_Y = DIGIT_HEIGHT;
 	protected static final int DIGIT_SPACING = 1;
-	protected static final int RADIUS = 7;
+	protected static final int RADIUS = 6;
 	protected static final int PADDING = RADIUS/2;
 	
 	private final int MILLI_PER_DAY = 1000*60*60*24;
@@ -32,16 +31,7 @@ public class TimeDisplay {
 	    // Initialize matrix
 		for(int i=0;i<NUM_X;i++){
 			for(int j=0;j<NUM_Y;j++){
-				// Colon
-				if(i==COLON_COLS[0]||
-				   i==COLON_COLS[1]||
-				   i==COLON_COLS[2]){
-					mDotMatrix[i][j] = Palette.CLEAR;
-					continue;
-				}
-				else{
-					mDotMatrix[i][j] = Palette.LT_GREY;
-				}
+				mDotMatrix[i][j] = Palette.CLEAR;
 			}
 		}
 		updateMatrix();
@@ -261,10 +251,7 @@ public class TimeDisplay {
 	
 	private int digitToMatrixOffset(int digitIndex){
 		int col = digitIndex*DIGIT_WIDTH;
-		for(int c=0;c<COLON_COLS.length;c++){
-			if(col >= COLON_COLS[c])
-				col++;
-		}
+		col += col/(DIGIT_WIDTH); // For columns
 		return col;
 	}
 	
