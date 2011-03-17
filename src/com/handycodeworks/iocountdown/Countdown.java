@@ -1,7 +1,5 @@
 package com.handycodeworks.iocountdown;
 
-import static org.anddev.andengine.extension.physics.box2d.util.constants.PhysicsConstants.PIXEL_TO_METER_RATIO_DEFAULT;
-
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.options.EngineOptions;
@@ -12,7 +10,6 @@ import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
 import org.anddev.andengine.entity.scene.background.ColorBackground;
 import org.anddev.andengine.entity.shape.Shape;
-import org.anddev.andengine.entity.sprite.AnimatedSprite;
 import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.examples.BaseExample;
@@ -26,11 +23,10 @@ import org.anddev.andengine.opengl.texture.Texture;
 import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TextureRegionFactory;
-import org.anddev.andengine.opengl.texture.region.TiledTextureRegion;
 import org.anddev.andengine.sensor.accelerometer.AccelerometerData;
 import org.anddev.andengine.sensor.accelerometer.IAccelerometerListener;
-import org.anddev.andengine.util.Debug;
 
+import android.graphics.Paint;
 import android.hardware.SensorManager;
 import android.widget.Toast;
 
@@ -38,16 +34,17 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 
-/**
- * @author Nicolas Gramlich
- * @since 18:47:08 - 19.03.2010
- */
+
 public class Countdown extends BaseExample implements IAccelerometerListener, IOnSceneTouchListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
+
+	@Override
+	public void runOnUpdateThread(Runnable pRunnable) {
+		super.runOnUpdateThread(pRunnable);
+	}
 
 	private static final int CAMERA_WIDTH = 720;
 	private static final int CAMERA_HEIGHT = 480;
@@ -58,31 +55,15 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 	// Fields
 	// ===========================================================
 
-	private Texture mTexture;
-	private BuildableTexture mBuildableTexture;
+//	private Texture mTexture;
 
-	private TextureRegion mBall;
-//	private TiledTextureRegion mBoxFaceTextureRegion;
-//	private TiledTextureRegion mCircleFaceTextureRegion;
-//	private TiledTextureRegion mTriangleFaceTextureRegion;
-//	private TiledTextureRegion mHexagonFaceTextureRegion;
+	private TextureRegion mLtGreyBall;
+	private TextureRegion mBlueBall;
 
 	private PhysicsWorld mPhysicsWorld;
 
-	private int mFaceCount = 0;
-
-	// ===========================================================
-	// Constructors
-	// ===========================================================
-
-	// ===========================================================
-	// Getter & Setter
-	// ===========================================================
-
-	// ===========================================================
-	// Methods for/from SuperClass/Interfaces
-	// ===========================================================
-
+	private TimeDisplay mTime;
+	
 	@Override
 	public Engine onLoadEngine() {
 		Toast.makeText(this, "Touch the screen to add objects.", Toast.LENGTH_LONG).show();
@@ -95,18 +76,15 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 	@Override
 	public void onLoadResources() {
 		/* Textures. */
-		this.mTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-		this.mBuildableTexture = new BuildableTexture(64, 128);
-//		TextureRegionFactory.setAssetBasePath("gfx/");
+		Texture blueTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+		Texture ltGreyTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 
 		/* TextureRegions. */
-//		this.mBoxFaceTextureRegion = TextureRegionFactory.createTiledFromAsset(this.mTexture, this, "face_box_tiled.png", 0, 0, 2, 1); // 64x32
-//		this.mCircleFaceTextureRegion = TextureRegionFactory.createTiledFromAsset(this.mTexture, this, "face_circle_tiled.png", 0, 32, 2, 1); // 64x32
-//		this.mTriangleFaceTextureRegion = TextureRegionFactory.createTiledFromAsset(this.mTexture, this, "face_triangle_tiled.png", 0, 64, 2, 1); // 64x32
-//		this.mHexagonFaceTextureRegion = TextureRegionFactory.createTiledFromAsset(this.mTexture, this, "face_hexagon_tiled.png", 0, 96, 2, 1); // 64x32
 		TextureRegionFactory.setAssetBasePath("balls/");
-		this.mBall = TextureRegionFactory.createFromAsset(this.mTexture, this, "blue.png", 0, 0); // 64x32
-		this.mEngine.getTextureManager().loadTexture(this.mTexture);
+		this.mBlueBall = TextureRegionFactory.createFromAsset(blueTexture, this, "blue.png", 0, 0);
+		this.mEngine.getTextureManager().loadTexture(blueTexture);
+		this.mLtGreyBall = TextureRegionFactory.createFromAsset(ltGreyTexture, this, "grey3.png", 0, 0);
+		this.mEngine.getTextureManager().loadTexture(ltGreyTexture);
 
 //		this.enableAccelerometerSensor(this);
 	}
@@ -116,10 +94,15 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		this.mEngine.registerUpdateHandler(new FPSLogger());
 
 		final Scene scene = new Scene(2);
-		scene.setBackground(new ColorBackground(0, 0, 0));
+		scene.setBackground(new ColorBackground(211, 211, 211));
 		scene.setOnSceneTouchListener(this);
 
 		this.mPhysicsWorld = new PhysicsWorld(new Vector2(0, SensorManager.GRAVITY_EARTH), false);
+		
+		// Time display
+		this.mTime = new TimeDisplay(CAMERA_WIDTH,CAMERA_HEIGHT);
+	    originX = CAMERA_WIDTH/2 - (TimeDisplay.NUM_X/2)*(TimeDisplay.PADDING + 2*TimeDisplay.RADIUS) + TimeDisplay.RADIUS + TimeDisplay.PADDING/2;
+	    originY = CAMERA_HEIGHT/2 + (TimeDisplay.NUM_Y/2)*(TimeDisplay.RADIUS*2 + TimeDisplay.PADDING);
 
 		final Shape ground = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2);
 		final Shape roof = new Rectangle(0, 0, CAMERA_WIDTH, 2);
@@ -144,17 +127,17 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 
 	@Override
 	public void onLoadComplete() {
-
+	    loadDots();
 	}
 
 	@Override
 	public boolean onSceneTouchEvent(final Scene pScene, final TouchEvent pSceneTouchEvent) {
-		if(this.mPhysicsWorld != null) {
-			if(pSceneTouchEvent.isActionDown()) {
-				this.addFace(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
-				return true;
-			}
-		}
+//		if(this.mPhysicsWorld != null) {
+//			if(pSceneTouchEvent.isActionDown()) {
+//				this.addBall(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
+//				return true;
+//			}
+//		}
 		return false;
 	}
 
@@ -164,45 +147,46 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		this.mPhysicsWorld.setGravity(gravity);
 		Vector2Pool.recycle(gravity);
 	}
+	
+	private int originX = 0, originY = 0;
+	
+	private void loadDots(){
 
-	// ===========================================================
-	// Methods
-	// ===========================================================
-
-	private void addFace(final float pX, final float pY) {
+		int dotX = originX,dotY = originY;
+		for(int j=0;j<TimeDisplay.NUM_Y;j++){
+			dotX = originX;
+			for(int i=0;i<TimeDisplay.NUM_X;i++){
+//				canvas.drawCircle(dotX, dotY, TimeDisplay.RADIUS, paint);
+				addBall(dotX, dotY, mTime.mDotMatrix[i][j]);
+				dotX += TimeDisplay.RADIUS*2 + TimeDisplay.PADDING;
+			}
+			dotY -= TimeDisplay.RADIUS*2 + TimeDisplay.PADDING;
+		}
+		
+		// Center reference point
+//		paint.setColor(Color.BLACK);
+//		canvas.drawCircle(centerX, centerY, 1, paint);
+	}
+	
+	protected void addBall(final float pX, final float pY, int ballColor) {
 		final Scene scene = this.mEngine.getScene();
-
-		this.mFaceCount++;
-		Debug.d("Faces: " + this.mFaceCount);
 
 		final Sprite face;
 		final Body body;
 
-		face = new Sprite(pX, pY, this.mBall);
-		body = PhysicsFactory.createCircleBody(this.mPhysicsWorld, face, BodyType.DynamicBody, FIXTURE_DEF);
-		/*
-		if(this.mFaceCount % 4 == 0) {
-			face = new AnimatedSprite(pX, pY, this.mBoxFaceTextureRegion);
-			body = PhysicsFactory.createBoxBody(this.mPhysicsWorld, face, BodyType.DynamicBody, FIXTURE_DEF);
-		} else if (this.mFaceCount % 4 == 1) {
-			face = new AnimatedSprite(pX, pY, this.mCircleFaceTextureRegion);
-			body = PhysicsFactory.createCircleBody(this.mPhysicsWorld, face, BodyType.DynamicBody, FIXTURE_DEF);
-		} else if (this.mFaceCount % 4 == 2) {
-			face = new AnimatedSprite(pX, pY, this.mTriangleFaceTextureRegion);
-			body = Countdown.createTriangleBody(this.mPhysicsWorld, face, BodyType.DynamicBody, FIXTURE_DEF);
-		} else {
-			face = new AnimatedSprite(pX, pY, this.mHexagonFaceTextureRegion);
-			body = Countdown.createHexagonBody(this.mPhysicsWorld, face, BodyType.DynamicBody, FIXTURE_DEF);
-		}*/
-
-//		face.animate(200);
+		TextureRegion ballTexture = null;
+		switch(ballColor){
+		case Palette.LT_GREY:
+			ballTexture = mLtGreyBall;
+			break;
+		case Palette.BLUE:
+			ballTexture = mBlueBall;
+			break;
+		}
+		face = new Sprite(pX, pY, ballTexture);
+		body = PhysicsFactory.createCircleBody(this.mPhysicsWorld, face, BodyType.StaticBody, FIXTURE_DEF);
 
 		scene.getLastChild().attachChild(face);
 		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(face, body, true, true));
 	}
-	
-
-	// ===========================================================
-	// Inner and Anonymous Classes
-	// ===========================================================
 }

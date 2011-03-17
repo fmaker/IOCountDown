@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="org/anddev/andengine/examples/launcher/ExampleGroup.java|org/anddev/andengine/examples/launcher/ExampleLauncher.java|org/anddev/andengine/examples/launcher/ExpandableExampleLauncherListAdapter.java" kind="src" path="src"/>
+	<classpathentry excluding="org/anddev/andengine/examples/launcher/ExampleGroup.java|org/anddev/andengine/examples/launcher/ExampleLauncher.java|org/anddev/andengine/examples/launcher/ExpandableExampleLauncherListAdapter.java|com/handycodeworks/iocountdown/Panel.java|com/handycodeworks/iocountdown/CanvasThread.java" kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="lib" path="lib/andengine.jar"/>

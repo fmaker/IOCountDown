@@ -71,7 +71,7 @@ public class Panel extends SurfaceView implements SurfaceHolder.Callback{
 	private void clearMatrix(){
 		for(int i=0;i<NUM_X;i++){
 			for(int j=0;j<NUM_Y;j++){
-				dotMatrix[i][j] = Palette.BLANK_DOT;
+				dotMatrix[i][j] = Palette.LT_GREY;
 			}
 		}
 	}
