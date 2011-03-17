@@ -57,7 +57,6 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 	Texture mTexture;
 	private TextureRegion mLtGreyBall, mBlueBall, mDarkGreyBall, mCyanBall, mRedBall, mGreenBall, logoTextureRegion;
 	private Sprite[][] mBallMatrix = new Sprite[TimeDisplay.NUM_X][TimeDisplay.NUM_Y];
-	private LinkedList<Sprite> mFreeBalls = new LinkedList<Sprite>();
 
 	private PhysicsWorld mPhysicsWorld;
 
