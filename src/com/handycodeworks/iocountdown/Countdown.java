@@ -59,6 +59,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 
 	private TextureRegion mLtGreyBall;
 	private TextureRegion mBlueBall;
+	private TextureRegion mDarkGreyBall;
 
 	private PhysicsWorld mPhysicsWorld;
 
@@ -66,7 +67,6 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 	
 	@Override
 	public Engine onLoadEngine() {
-		Toast.makeText(this, "Touch the screen to add objects.", Toast.LENGTH_LONG).show();
 		final Camera camera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
 		final EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), camera);
 		engineOptions.getTouchOptions().setRunOnUpdateThread(true);
@@ -78,6 +78,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		/* Textures. */
 		Texture blueTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 		Texture ltGreyTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+		Texture darkGreyTexture = new Texture(16, 16, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
 
 		/* TextureRegions. */
 		TextureRegionFactory.setAssetBasePath("balls/");
@@ -85,6 +86,8 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		this.mEngine.getTextureManager().loadTexture(blueTexture);
 		this.mLtGreyBall = TextureRegionFactory.createFromAsset(ltGreyTexture, this, "grey3.png", 0, 0);
 		this.mEngine.getTextureManager().loadTexture(ltGreyTexture);
+		this.mDarkGreyBall = TextureRegionFactory.createFromAsset(ltGreyTexture, this, "grey2.png", 0, 0);
+		this.mEngine.getTextureManager().loadTexture(darkGreyTexture);
 
 //		this.enableAccelerometerSensor(this);
 	}
@@ -101,7 +104,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		
 		// Time display
 		this.mTime = new TimeDisplay(CAMERA_WIDTH,CAMERA_HEIGHT);
-	    originX = CAMERA_WIDTH/2 - (TimeDisplay.NUM_X/2)*(TimeDisplay.PADDING + 2*TimeDisplay.RADIUS) + TimeDisplay.RADIUS + TimeDisplay.PADDING/2;
+	    originX = CAMERA_WIDTH/2 - (TimeDisplay.NUM_X/2)*(TimeDisplay.PADDING + 2*TimeDisplay.RADIUS) - TimeDisplay.RADIUS;// + TimeDisplay.PADDING/2;
 	    originY = CAMERA_HEIGHT/2 + (TimeDisplay.NUM_Y/2)*(TimeDisplay.RADIUS*2 + TimeDisplay.PADDING);
 
 		final Shape ground = new Rectangle(0, CAMERA_HEIGHT - 2, CAMERA_WIDTH, 2);
@@ -156,7 +159,6 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 		for(int j=0;j<TimeDisplay.NUM_Y;j++){
 			dotX = originX;
 			for(int i=0;i<TimeDisplay.NUM_X;i++){
-//				canvas.drawCircle(dotX, dotY, TimeDisplay.RADIUS, paint);
 				addBall(dotX, dotY, mTime.mDotMatrix[i][j]);
 				dotX += TimeDisplay.RADIUS*2 + TimeDisplay.PADDING;
 			}
@@ -176,12 +178,19 @@ public class Countdown extends BaseExample implements IAccelerometerListener, IO
 
 		TextureRegion ballTexture = null;
 		switch(ballColor){
+		case Palette.DARK_GREY:
+			ballTexture = mDarkGreyBall;
+			break;
 		case Palette.LT_GREY:
 			ballTexture = mLtGreyBall;
 			break;
 		case Palette.BLUE:
 			ballTexture = mBlueBall;
 			break;
+		case Palette.CLEAR:
+		default:
+			// Don't draw anything
+			return;
 		}
 		face = new Sprite(pX, pY, ballTexture);
 		body = PhysicsFactory.createCircleBody(this.mPhysicsWorld, face, BodyType.StaticBody, FIXTURE_DEF);
