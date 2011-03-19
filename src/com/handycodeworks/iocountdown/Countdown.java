@@ -248,6 +248,7 @@ public class Countdown extends BaseExample implements IAccelerometerListener, Ti
 
 						// Add new sprite
 						Sprite newBall = addBall(ball.getX(),ball.getY(),newColor);
+						newBall.setZIndex(1);
 						mBallMatrix[i][j]=newBall;
 					}
 				}
