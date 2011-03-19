@@ -1,0 +1,15 @@
+# Description
+Semi-clone of the Google I/O 2011 countdown clock. It was created using the 
+[Andengine](http://www.andengine.org/) 2D physics engine. I hacked this out
+in 24 hours for the Google Android Last call contest. Then sadly I submitted
+it at 5AM, the email bounced and woke up past the deadline. Oh well, so is life.
+Hopefully this code can be useful to someone. Enjoy ;-)
+
+# Problems
+* Really slow animation! I'm using PNGs to create sprites for each ball. There
+is so much room for optimization its not even funny.
+* Countdown is fixed for the 2011 Google I/O conference. Should have an options
+menu to change it.
+
+# Screenshots
+TBD
